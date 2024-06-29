@@ -29,4 +29,21 @@ fn main() {
     // （3）常量可以在任何作用域内进行声明，包括全局作用域
     // （4）常量只能绑定到常量表达式
     // 命名规范方面：使用大写字母，每个单词之间使用下划线进行分割
+
+    main2()
+}
+
+fn main2() {
+    let x = 5;
+    println!("The value of x is: {}", x); // 输出: 5
+
+    let x = x + 1;
+    println!("The value of x is: {}", x); // 输出: 6
+
+    {
+        let x = x * 2;
+        println!("The value of x in the inner scope is: {}", x); // 输出: 12
+    }
+
+    println!("The value of x is: {}", x); // 输出: 6
 }
