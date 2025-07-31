@@ -1,0 +1,24 @@
+[package]
+name = "rust-crud-api"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "migrate"
+path = "src/bin/migrate.rs"
+
+[dependencies]
+actix-web = "4.4"
+tokio = { version = "1.0", features = ["full"] }
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "migrate"] }
+serde = { version = "1.0", features = ["derive"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+bcrypt = "0.15"
+chrono = { version = "0.4", features = ["serde"] }
+dotenv = "0.15"
+anyhow = "1.0"
+env_logger = "0.10"
+regex = "1.10"
+serde_json = "1.0"
+futures-util = "0.3"
+log = "0.4"
