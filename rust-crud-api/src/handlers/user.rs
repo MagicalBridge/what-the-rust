@@ -26,7 +26,7 @@ pub async fn create_user(
         user.username
     );
 
-    let response = ApiResponse::success(UserResponse::from(user), "用户注册成功");
+    let response = ApiResponse::success_with_print(UserResponse::from(user), "用户注册成功");
     Ok(HttpResponse::Created().json(response))
 }
 
@@ -41,7 +41,7 @@ pub async fn get_user_by_id(
 
     match user_service.get_user_by_id(user_id).await? {
         Some(user) => {
-            let response = ApiResponse::success(UserResponse::from(user), "获取用户信息成功");
+            let response = ApiResponse::success_with_print(UserResponse::from(user), "获取用户信息成功");
             Ok(HttpResponse::Ok().json(response))
         }
         None => Err(AppError::NotFound("用户不存在".to_string())),
@@ -57,7 +57,7 @@ pub async fn get_user_by_username(
 
     match user_service.get_user_by_username(&username).await? {
         Some(user) => {
-            let response = ApiResponse::success(UserResponse::from(user), "获取用户信息成功");
+            let response = ApiResponse::success_with_print(UserResponse::from(user), "获取用户信息成功");
             Ok(HttpResponse::Ok().json(response))
         }
         None => Err(AppError::NotFound("用户不存在".to_string())),
@@ -73,7 +73,7 @@ pub async fn get_all_users(user_service: web::Data<UserService>) -> Result<HttpR
     log::info!("✅ 获取用户列表成功: 共{}个用户", users.len());
     let user_responses: Vec<UserResponse> = users.into_iter().map(UserResponse::from).collect();
 
-    let response = ApiResponse::success(user_responses, "获取用户列表成功");
+    let response = ApiResponse::success_with_print(user_responses, "获取用户列表成功");
     Ok(HttpResponse::Ok().json(response))
 }
 

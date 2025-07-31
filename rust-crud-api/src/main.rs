@@ -26,10 +26,6 @@ async fn main() -> std::io::Result<()> {
     let pool = database::create_pool(&config).await
         .expect("Failed to create database pool");
 
-    // 运行数据库迁移
-    database::run_migrations(&pool).await
-        .expect("Failed to run database migrations");
-
     // 创建用户服务
     let user_service = services::UserService::new(pool);
 

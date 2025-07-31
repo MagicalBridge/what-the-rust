@@ -55,8 +55,9 @@ where
             // 调用下一个服务
             let res = service.call(req).await?;
             
-            // 获取响应状态码
+            // 获取响应状态码和头信息
             let status = res.status();
+            let headers = res.headers();
             
             // 打印响应信息到终端
             println!("\n🔍 API响应调试信息");
@@ -80,14 +81,20 @@ where
             );
             
             // 打印响应头信息（部分重要的）
-            let headers = res.headers();
             if let Some(content_type) = headers.get("content-type") {
                 if let Ok(content_type_str) = content_type.to_str() {
                     println!("📄 内容类型: {}", content_type_str);
                 }
             }
             
-            println!("💡 提示: 响应体内容会在请求日志中间件显示");
+            // 打印内容长度
+            if let Some(content_length) = headers.get("content-length") {
+                if let Ok(length_str) = content_length.to_str() {
+                    println!("📏 内容长度: {} 字节", length_str);
+                }
+            }
+            
+            println!("💡 提示: 响应体内容已在处理程序中打印（如果启用）");
             println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
             
             Ok(res)
