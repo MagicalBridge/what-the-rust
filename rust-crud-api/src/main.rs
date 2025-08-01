@@ -26,15 +26,27 @@ async fn main() -> std::io::Result<()> {
     let pool = database::create_pool(&config).await
         .expect("Failed to create database pool");
 
+    // 创建Redis连接池
+    let redis_pool = database::create_redis_pool(&config).await
+        .expect("Failed to create Redis pool");
+
+    // 测试Redis连接
+    database::test_redis_connection(&redis_pool).await
+        .expect("Failed to connect to Redis");
+    
+    // 创建缓存服务
+    let cache_service = services::cache::CacheService::new(redis_pool, config.cache_ttl_seconds);
+
     // 创建用户服务
-    let user_service = services::UserService::new(pool);
+    let user_service = services::UserService::new(pool, cache_service);
 
     println!("🚀 服务器启动在 http://{}", config.bind_address());
+    println!("💾 Redis缓存已启用，TTL: {}秒", config.cache_ttl_seconds);
     println!("📚 API 文档:");
     println!("  POST   /api/users          - 用户注册");
-    println!("  GET    /api/users          - 获取所有用户");
-    println!("  GET    /api/users/{{id}}     - 根据 ID 获取用户");
-    println!("  GET    /api/users/username/{{username}} - 根据用户名获取用户");
+    println!("  GET    /api/users          - 获取所有用户 (缓存支持)");
+    println!("  GET    /api/users/{{id}}     - 根据 ID 获取用户 (缓存支持)");
+    println!("  GET    /api/users/username/{{username}} - 根据用户名获取用户 (缓存支持)");
     println!("  PUT    /api/users/{{id}}     - 更新用户信息");
     println!("  DELETE /api/users/{{id}}     - 删除用户");
     println!("  GET    /health             - 健康检查");

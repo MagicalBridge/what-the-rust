@@ -7,6 +7,8 @@ pub struct Config {
     pub server_host: String,
     pub server_port: String,
     pub jwt_secret: Option<String>,
+    pub redis_url: String,
+    pub cache_ttl_seconds: u64,
 }
 
 impl Config {
@@ -17,6 +19,11 @@ impl Config {
             server_host: env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string()),
             server_port: env::var("SERVER_PORT").unwrap_or_else(|_| "8080".to_string()),
             jwt_secret: env::var("JWT_SECRET").ok(),
+            redis_url: env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
+            cache_ttl_seconds: env::var("CACHE_TTL_SECONDS")
+                .unwrap_or_else(|_| "120".to_string()) // 默认2分钟
+                .parse()
+                .unwrap_or(120),
         })
     }
 

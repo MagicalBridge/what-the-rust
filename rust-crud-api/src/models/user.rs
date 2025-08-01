@@ -9,7 +9,7 @@ pub struct User {
     pub id: Uuid,
     pub username: String,
     pub email: String,
-    #[serde(skip_serializing)] // 密码不序列化到响应中
+    #[serde(skip_serializing, default)] // 密码不序列化到响应中，反序列化时使用默认值
     pub password_hash: String,
     pub full_name: String,
     pub created_at: DateTime<Utc>,
