@@ -1,0 +1,5 @@
+/target
+
+# 忽略 Code Runner 临时文件
+tempCodeRunnerFile.*
+*.rcgu.o
