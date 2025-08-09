@@ -59,7 +59,7 @@ fn basic_variables() {
     println!("   is_rust_awesome = {}", is_rust_awesome);
     println!("   is_learning = {}", is_learning);
     
-    // 字符
+    // 字符 单个字符 只能用单引号
     let heart = '❤';
     let rust_logo = '🦀';
     
@@ -236,7 +236,7 @@ fn type_conversion() {
 fn tuples_and_arrays() {
     println!("9. 元组和数组:");
     
-    // 元组
+    // 元组 元素数量固定，类型可以不同
     let tuple: (i32, f64, &str) = (500, 6.4, "hello");
     println!("   元组: {:?}", tuple);
     println!("   元组第一个元素: {}", tuple.0);
@@ -247,7 +247,7 @@ fn tuples_and_arrays() {
     let (x, y, z) = tuple;
     println!("   解构后: x={}, y={}, z={}", x, y, z);
     
-    // 数组
+    // 数组 元素数量固定，类型相同
     let arr: [i32; 5] = [1, 2, 3, 4, 5];
     println!("   数组: {:?}", arr);
     println!("   数组第一个元素: {}", arr[0]);
