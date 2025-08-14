@@ -106,13 +106,13 @@ fn struct_field_access() {
     // 结构体字段的引用
     let x_ref = &point.x;
     let y_ref = &point.y;
-    println!("   x坐标引用: {}", x_ref);
-    println!("   y坐标引用: {}", y_ref);
+    println!("   x坐标引用: {}", x_ref); // 15.0
+    println!("   y坐标引用: {}", y_ref); // 25.0
     
     // 结构体字段的可变引用
     let x_mut_ref = &mut point.x;
     *x_mut_ref = 30.0;
-    println!("   通过可变引用修改x: {}", point.x);
+    println!("   通过可变引用修改x: {}", point.x); // 30.0
     
     // 结构体解构
     let Point { x, y } = point;
