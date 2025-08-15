@@ -164,7 +164,7 @@ fn struct_methods() {
         }
     }
     
-    let mut rect = Rectangle {
+    let mut rect: Rectangle = Rectangle {
         width: 30,
         height: 50,
     };
@@ -180,7 +180,7 @@ fn struct_methods() {
     println!("   调整后是否为正方形: {}", rect.is_square());
     
     // 检查包含关系
-    let small_rect = Rectangle {
+    let small_rect: Rectangle = Rectangle {
         width: 20,
         height: 30,
     };
@@ -226,16 +226,16 @@ fn associated_functions() {
     }
     
     // 使用关联函数创建实例
-    let circle1 = Circle::new(5.0);
-    let circle2 = Circle::unit();
-    let circle3 = Circle::from_diameter(10.0);
+    let circle1: Circle = Circle::new(5.0);
+    let circle2: Circle = Circle::unit();
+    let circle3: Circle = Circle::from_diameter(10.0);
     
     println!("   圆形1 (半径5): 面积 = {:.2}, 周长 = {:.2}", 
-             circle1.area(), circle1.circumference());
+            circle1.area(), circle1.circumference());
     println!("   单位圆: 面积 = {:.2}, 周长 = {:.2}", 
-             circle2.area(), circle2.circumference());
+            circle2.area(), circle2.circumference());
     println!("   圆形3 (直径10): 面积 = {:.2}, 周长 = {:.2}", 
-             circle3.area(), circle3.circumference());
+            circle3.area(), circle3.circumference());
     
     println!();
 }
@@ -269,7 +269,7 @@ fn struct_update_syntax() {
     
     println!("   新用户: {} ({})", user2.username, user2.email);
     println!("   新用户状态: active={}, sign_in_count={}", 
-             user2.active, user2.sign_in_count);
+            user2.active, user2.sign_in_count);
     
     // 部分更新
     let user3 = User {
