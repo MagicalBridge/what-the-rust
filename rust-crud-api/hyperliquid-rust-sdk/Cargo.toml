@@ -1,0 +1,32 @@
+[package]
+name = "hyperliquid_rust_sdk"
+version = "0.6.0"
+edition = "2021"
+license = "MIT"
+description = "Rust SDK for Hyperliquid"
+homepage = "https://hyperliquid.xyz/"
+readme = "README.md"
+documentation = "https://github.com/hyperliquid-dex/hyperliquid-rust-sdk"
+repository = "https://github.com/hyperliquid-dex/hyperliquid-rust-sdk"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+alloy = { version = "1.0", default-features = false, features = [
+  "dyn-abi",
+  "sol-types",
+  "signer-local",
+] }
+chrono = "0.4.26"
+env_logger = "0.11.8"
+futures-util = "0.3.28"
+lazy_static = "1.0"
+log = "0.4.19"
+reqwest = "0.12.19"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rmp-serde = "1.0"
+thiserror = "2.0"
+tokio = { version = "1.0", features = ["full"] }
+tokio-tungstenite = { version = "0.20.0", features = ["native-tls"] }
+uuid = { version = "1.0", features = ["v4"] }
