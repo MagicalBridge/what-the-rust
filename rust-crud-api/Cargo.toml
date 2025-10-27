@@ -8,6 +8,10 @@ default-run = "rust-crud-api"
 name = "migrate"
 path = "src/bin/migrate.rs"
 
+[[bin]]
+name = "hyperliquid_demo"
+path = "src/bin/hyperliquid_demo.rs"
+
 [dependencies]
 actix-web = "4.4"
 tokio = { version = "1.0", features = ["full"] }

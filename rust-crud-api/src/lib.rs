@@ -7,6 +7,7 @@ pub mod routes; // 路由模块
 pub mod middleware; // 中间件模块
 pub mod utils; // 工具函数模块
 pub mod errors; // 错误处理模块
+pub mod examples; // 示例模块
 
 pub use config::Config; // 导出配置模块
 pub use database::DatabasePool; // 导出数据库连接池模块
