@@ -2,7 +2,6 @@ use hyperliquid_rust_sdk::{InfoClient, BaseUrl};
 use anyhow::Result;
 
 /// 示例：如何使用 Hyperliquid Rust SDK
-/// 
 /// 这个示例展示了如何：
 /// 1. 创建 InfoClient 实例
 /// 2. 获取市场信息
