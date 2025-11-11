@@ -25,6 +25,8 @@ async fn main() -> std::io::Result<()> {
     // 创建数据库连接池
     let pool = database::create_pool(&config).await
         .expect("Failed to create database pool");
+    // 供监听器使用的克隆
+    let pool_for_watcher = pool.clone();
 
     // 创建Redis连接池
     let redis_pool = database::create_redis_pool(&config).await
@@ -39,6 +41,16 @@ async fn main() -> std::io::Result<()> {
 
     // 创建用户服务
     let user_service = services::UserService::new(pool, cache_service);
+
+    // 启动区块链监听（后台任务）
+    {
+        let config_clone = config.clone();
+        tokio::spawn(async move {
+            if let Err(e) = rust_crud_api::listeners::arbitrum_vault::start_vault_watcher(config_clone, pool_for_watcher).await {
+                log::error!("❌ Vault 监听器启动失败: {}", e);
+            }
+        });
+    }
 
     println!("🚀 服务器启动在 http://{}", config.bind_address());
     println!("💾 Redis缓存已启用，TTL: {}秒", config.cache_ttl_seconds);

@@ -29,3 +29,4 @@ futures-util = "0.3"
 log = "0.4"
 redis = { version = "0.24", features = ["tokio-comp"] }
 hyperliquid_rust_sdk = { path = "./hyperliquid-rust-sdk" }
+ethers = { version = "2", features = ["ws", "rustls"] }

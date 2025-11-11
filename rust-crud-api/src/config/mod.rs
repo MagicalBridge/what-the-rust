@@ -9,6 +9,13 @@ pub struct Config {
     pub jwt_secret: Option<String>,
     pub redis_url: String,
     pub cache_ttl_seconds: u64,
+    // 区块链监听配置
+    pub arbitrum_ws_url: Option<String>,
+    pub arbitrum_http_url: Option<String>,
+    pub vault_contract_address: Option<String>,
+    pub usdc_token_address: Option<String>,
+    pub enable_vault_watcher: bool,
+    pub watcher_confirmations: u64,
 }
 
 impl Config {
@@ -24,6 +31,15 @@ impl Config {
                 .unwrap_or_else(|_| "120".to_string()) // 默认2分钟
                 .parse()
                 .unwrap_or(120),
+            arbitrum_ws_url: env::var("ARBITRUM_WS_URL").ok(),
+            arbitrum_http_url: env::var("ARBITRUM_HTTP_URL").ok(),
+            vault_contract_address: env::var("VAULT_CONTRACT_ADDRESS").ok(),
+            usdc_token_address: env::var("USDC_TOKEN_ADDRESS").ok(),
+            enable_vault_watcher: env::var("ENABLE_VAULT_WATCHER").map(|v| v == "true").unwrap_or(true),
+            watcher_confirmations: env::var("WATCHER_CONFIRMATIONS")
+                .unwrap_or_else(|_| "2".to_string())
+                .parse()
+                .unwrap_or(2),
         })
     }
 
