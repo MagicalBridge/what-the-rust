@@ -16,6 +16,8 @@ pub struct Config {
     pub usdc_token_address: Option<String>,
     pub enable_vault_watcher: bool,
     pub watcher_confirmations: u64,
+    // 区块链扫描起始块高度配置
+    pub vault_start_block: Option<u64>,
 }
 
 impl Config {
@@ -40,6 +42,9 @@ impl Config {
                 .unwrap_or_else(|_| "2".to_string())
                 .parse()
                 .unwrap_or(2),
+            vault_start_block: env::var("VAULT_START_BLOCK")
+                .ok()
+                .and_then(|v| v.parse().ok()),
         })
     }
 
