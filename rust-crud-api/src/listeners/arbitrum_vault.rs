@@ -191,15 +191,20 @@ pub async fn start_vault_watcher(config: Config, pool: DatabasePool) -> anyhow::
                 }
                 Err(e) => {
                     log::error!("❌ 获取日志失败 (区块范围 {} -> {}): {}", current_block, end_block, e);
-                    // 继续处理下一批，不中断整个流程
+                    // 如果失败，停止处理后续批次，避免跳过区块
+                    break;
                 }
             }
             
             current_block = end_block + 1;
         }
         
-        // 最后更新到 latest
-        update_last_block(&pool, source, latest).await?;
+        // 最后更新到成功处理的区块，而不是latest，确保失败的区块可以在下次尝试中被处理
+        if current_block > start_block {
+            let last_successfully_processed = current_block - 1;
+            update_last_block(&pool, source, last_successfully_processed).await?;
+            log::info!("✅ 初始扫描完成，已处理到区块: {}", last_successfully_processed);
+        }
     }
 
     // 使用HTTP轮询新区块
