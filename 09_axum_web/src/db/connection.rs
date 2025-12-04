@@ -23,5 +23,6 @@ pub async fn create_connection_pool(database_url: &str) -> Result<DbPool, sqlx::
 }
 
 pub async fn run_migrations(pool: &DbPool) -> Result<(), sqlx::migrate::MigrateError> {
+    // 直接运行迁移，如果表已存在会报错，但我们可以在main.rs中处理
     sqlx::migrate!("src/db/migrations").run(pool).await
 }

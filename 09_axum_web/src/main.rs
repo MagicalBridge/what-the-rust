@@ -36,8 +36,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Database connection pool created");
 
     // 运行数据库迁移
-    run_migrations(&pool).await?;
-    info!("Database migrations completed");
+    match run_migrations(&pool).await {
+        Ok(_) => info!("Database migrations completed"),
+        Err(e) => {
+            if e.to_string().contains("already exists") {
+                info!("Database tables already exist, skipping migration");
+            } else {
+                return Err(Box::new(e) as Box<dyn std::error::Error>);
+            }
+        }
+    }
 
     // 配置CORS
     let cors = CorsLayer::new()

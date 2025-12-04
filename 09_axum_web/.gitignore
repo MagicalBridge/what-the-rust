@@ -13,9 +13,6 @@ Cargo.lock
 .DS_Store
 Thumbs.db
 
-# Environment
-.env
-
 # Database
 *.db
 *.sqlite
