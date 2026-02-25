@@ -1,8 +1,8 @@
 use crate::{Config, database::DatabasePool};
 use ethers::prelude::*;
-use ethers::providers::{Provider, Ws, Http};
-use futures_util::StreamExt;
-use std::sync::Arc;
+use ethers::providers::{Provider, Http};
+use std::time::Duration;
+use tokio::time;
 
 /// 获取ERC20 Transfer事件的签名哈希
 /// Transfer(address indexed from, address indexed to, uint256 value)
@@ -110,22 +110,31 @@ async fn insert_deposit(
 
 /// 启动 Arbitrum 上的 Vault 监听器：
 /// - 补扫区块：从上次处理到的区块到最新区块
+/// - 轮询新区块：定期检查新区块中的USDC转账事件
 pub async fn start_vault_watcher(config: Config, pool: DatabasePool) -> anyhow::Result<()> {
     if !config.enable_vault_watcher {
         log::info!("🔕 Vault 监听已禁用（ENABLE_VAULT_WATCHER=false）");
         return Ok(());
     }
 
-    let http_url = match &config.arbitrum_http_url { Some(u) => u.clone(), None => anyhow::bail!("ARBITRUM_HTTP_URL 未设置") };
-    let ws_url = match &config.arbitrum_ws_url { Some(u) => u.clone(), None => anyhow::bail!("ARBITRUM_WS_URL 未设置") };
-    let vault_addr_str = match &config.vault_contract_address { Some(a) => a.clone(), None => anyhow::bail!("VAULT_CONTRACT_ADDRESS 未设置") };
-    let usdc_addr_str = match &config.usdc_token_address { Some(a) => a.clone(), None => anyhow::bail!("USDC_TOKEN_ADDRESS 未设置") };
+    let http_url = match &config.arbitrum_http_url { 
+        Some(u) => u.clone(), 
+        None => anyhow::bail!("ARBITRUM_HTTP_URL 未设置") 
+    };
+    let vault_addr_str = match &config.vault_contract_address { 
+        Some(a) => a.clone(), 
+        None => anyhow::bail!("VAULT_CONTRACT_ADDRESS 未设置") 
+    };
+    let usdc_addr_str = match &config.usdc_token_address { 
+        Some(a) => a.clone(), 
+        None => anyhow::bail!("USDC_TOKEN_ADDRESS 未设置") 
+    };
 
     let vault_addr: Address = vault_addr_str.parse()?;
     let usdc_addr: Address = usdc_addr_str.parse()?;
     let source = "arbitrum_vault";
 
-    // HTTP provider 用于补扫
+    // HTTP provider
     let http = Provider::<Http>::try_from(http_url.clone())?;
     let latest = http.get_block_number().await?.as_u64() as i64;
 
@@ -149,54 +158,136 @@ pub async fn start_vault_watcher(config: Config, pool: DatabasePool) -> anyhow::
 
     if start_block <= latest {
         log::info!("📦 开始补扫 USDC Transfer 事件: {} -> {}", start_block, latest);
-        // 通过 get_logs 拉取 USDC 的 Transfer 事件，再过滤 to == vault
-        let filter = Filter::new()
-            .address(usdc_addr)
-            .from_block(start_block as u64)
-            .to_block(latest as u64);
+        
+        // 分批处理，每批最多10个区块（Alchemy免费计划限制）
+        let mut current_block = start_block;
+        while current_block <= latest {
+            let end_block = (current_block + 9).min(latest);
+            log::info!("🔍 处理区块范围: {} -> {}", current_block, end_block);
+            
+            // 通过 get_logs 拉取 USDC 的 Transfer 事件，再过滤 to == vault
+            let filter = Filter::new()
+                .address(usdc_addr)
+                .from_block(current_block as u64)
+                .to_block(end_block as u64);
 
-        let logs = http.get_logs(&filter).await?;
-        for log in logs {
-            if process_transfer_log(&pool, &log, vault_addr, usdc_addr, source).await? {
-                let tx_hash = format!("0x{:x}", log.transaction_hash.unwrap_or_default());
-                let from_topic = log.topics[1];
-                let from = Address::from_slice(&from_topic.as_bytes()[12..]);
-                let to_topic = log.topics[2];
-                let to = Address::from_slice(&to_topic.as_bytes()[12..]);
-                let amount = U256::from_big_endian(log.data.as_ref());
-                let amount_raw = u256_to_string(amount);
-                let sender = format!("0x{:x}", from);
-                let to_address = format!("0x{:x}", to);
+            match http.get_logs(&filter).await {
+                Ok(logs) => {
+                    for log in logs {
+                        if process_transfer_log(&pool, &log, vault_addr, usdc_addr, source).await? {
+                            let tx_hash = format!("0x{:x}", log.transaction_hash.unwrap_or_default());
+                            let from_topic = log.topics[1];
+                            let from = Address::from_slice(&from_topic.as_bytes()[12..]);
+                            let to_topic = log.topics[2];
+                            let to = Address::from_slice(&to_topic.as_bytes()[12..]);
+                            let amount = U256::from_big_endian(log.data.as_ref());
+                            let amount_raw = u256_to_string(amount);
+                            let sender = format!("0x{:x}", from);
+                            let to_address = format!("0x{:x}", to);
+                            
+                            log::info!("💰 检测到入金: {} -> {} amount: {} USDC (tx: {})", sender, to_address, amount_raw, tx_hash);
+                        }
+                    }
+                }
+                Err(e) => {
+                    log::error!("❌ 获取日志失败 (区块范围 {} -> {}): {}", current_block, end_block, e);
+                    // 如果失败，停止处理后续批次，避免跳过区块
+                    break;
+                }
+            }
+            
+            current_block = end_block + 1;
+        }
+        
+        // 最后更新到成功处理的区块，而不是latest，确保失败的区块可以在下次尝试中被处理
+        if current_block > start_block {
+            let last_successfully_processed = current_block - 1;
+            update_last_block(&pool, source, last_successfully_processed).await?;
+            log::info!("✅ 初始扫描完成，已处理到区块: {}", last_successfully_processed);
+        }
+    }
+
+    // 使用HTTP轮询新区块
+    log::info!("🔄 开始轮询新区块，每5秒检查一次");
+    let mut interval = time::interval(Duration::from_secs(5));
+    
+    loop {
+        interval.tick().await;
+        
+        // 获取最新区块号
+        let current_latest = match http.get_block_number().await {
+            Ok(block_number) => block_number.as_u64() as i64,
+            Err(e) => {
+                log::error!("❌ 获取最新区块号失败: {}", e);
+                continue;
+            }
+        };
+        
+        // 获取上次处理的区块号
+        let last_processed = match get_last_block(&pool, source).await {
+            Ok(Some(last)) => last,
+            Ok(None) => {
+                log::error!("❌ 无法获取上次处理的区块号");
+                continue;
+            }
+            Err(e) => {
+                log::error!("❌ 查询上次处理的区块号失败: {}", e);
+                continue;
+            }
+        };
+        
+        // 如果有新区块，检查其中的USDC转账事件
+        if current_latest > last_processed {
+            log::info!("🔍 检查新区块: {} -> {}", last_processed + 1, current_latest);
+            
+            // 分批处理，每批最多10个区块（Alchemy免费计划限制）
+            let mut current_block = last_processed + 1;
+            let mut last_successfully_processed = last_processed;
+            
+            while current_block <= current_latest {
+                let end_block = (current_block + 9).min(current_latest);
                 
-                log::info!("💰 检测到入金: {} -> {} amount: {} USDC (tx: {})", sender, to_address, amount_raw, tx_hash);
+                let filter = Filter::new()
+                    .address(usdc_addr)
+                    .from_block(current_block as u64)
+                    .to_block(end_block as u64);
+                
+                match http.get_logs(&filter).await {
+                    Ok(logs) => {
+                        for log in logs {
+                            if process_transfer_log(&pool, &log, vault_addr, usdc_addr, source).await? {
+                                let tx_hash = format!("0x{:x}", log.transaction_hash.unwrap_or_default());
+                                let from_topic = log.topics[1];
+                                let from = Address::from_slice(&from_topic.as_bytes()[12..]);
+                                let to_topic = log.topics[2];
+                                let to = Address::from_slice(&to_topic.as_bytes()[12..]);
+                                let amount = U256::from_big_endian(log.data.as_ref());
+                                let amount_raw = u256_to_string(amount);
+                                let sender = format!("0x{:x}", from);
+                                let to_address = format!("0x{:x}", to);
+                                
+                                log::info!("🔔 实时检测到入金: {} -> {} amount: {} USDC (tx: {})", sender, to_address, amount_raw, tx_hash);
+                            }
+                        }
+                        // 更新成功处理的区块
+                        last_successfully_processed = end_block;
+                    }
+                    Err(e) => {
+                        log::error!("❌ 获取日志失败 (区块范围 {} -> {}): {}", current_block, end_block, e);
+                        // 如果失败，停止处理后续批次，避免跳过区块
+                        break;
+                    }
+                }
+                
+                current_block = end_block + 1;
+            }
+            
+            // 更新已处理的区块号
+            if last_successfully_processed > last_processed {
+                if let Err(e) = update_last_block(&pool, source, last_successfully_processed).await {
+                    log::error!("❌ 更新区块进度失败: {}", e);
+                }
             }
         }
-        // 最后更新到 latest
-        update_last_block(&pool, source, latest).await?;
     }
-
-    // WebSocket provider 用于订阅新块
-    let ws = Provider::<Ws>::connect(ws_url.clone()).await?;
-    let ws = Arc::new(ws);
-    log::info!("🔌 WebSocket 连接已建立，开始订阅新块");
-
-    // 实时订阅 USDC 的日志，并在本地过滤 to == vault
-    let mut log_stream = ws.subscribe_logs(&Filter::new().address(usdc_addr)).await?;
-    while let Some(log) = log_stream.next().await {
-        if process_transfer_log(&pool, &log, vault_addr, usdc_addr, source).await? {
-            let tx_hash = format!("0x{:x}", log.transaction_hash.unwrap_or_default());
-            let from_topic = log.topics[1];
-            let from = Address::from_slice(&from_topic.as_bytes()[12..]);
-            let to_topic = log.topics[2];
-            let to = Address::from_slice(&to_topic.as_bytes()[12..]);
-            let amount = U256::from_big_endian(log.data.as_ref());
-            let amount_raw = u256_to_string(amount);
-            let sender = format!("0x{:x}", from);
-            let to_address = format!("0x{:x}", to);
-            
-            log::info!("🔔 实时检测到入金: {} -> {} amount: {} USDC (tx: {})", sender, to_address, amount_raw, tx_hash);
-        }
-    }
-
-    Ok(())
 }
