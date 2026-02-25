@@ -1,0 +1,23 @@
+name: "demo-app"
+db_path: "./data/demo.db"
+network: "testnet"
+api_version: 1
+
+chains:
+  - name: "Ethereum Sepolia"
+    rpc_url: "https://rpc.sepolia.org"
+    chain_id: 11155111
+    confirmations: 12
+
+  - name: "Polygon Mumbai"
+    rpc_url: "https://rpc-mumbai.maticvigil.com"
+    chain_id: 80001
+    confirmations: 6
+
+mq_config:
+  broker: "localhost:9092"
+  topic: "demo-events"
+
+enable_sync: true
+enable_api: true
+enable_monitor: true
