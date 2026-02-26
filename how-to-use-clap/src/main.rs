@@ -55,7 +55,19 @@ async fn main() -> Result<()> {
     let args = Args::parse();
 
     // 第 2 步：初始化日志
+    //
+    // args.log_level 是 String（如 "info"、"debug"）
+    // .parse() 即 str::parse::<T>()，Rust 根据上下文推断 T = tracing::Level
+    // tracing::Level 实现了 FromStr trait，所以能把字符串解析为枚举值
+    // .unwrap_or(...) — parse() 返回 Result，解析失败时回退到 INFO，不会 panic
     let log_level = args.log_level.parse().unwrap_or(tracing::Level::INFO);
+
+    // 下面是 Builder 模式（建造者模式）的链式调用：
+    // 1. fmt()          — 创建格式化日志订阅者的 Builder，日志以文本格式输出到终端
+    // 2. with_max_level — 设置最大日志级别过滤器，低于该级别的日志被丢弃
+    //                     例如设为 INFO，则 DEBUG/TRACE 会被过滤掉
+    // 3. init()         — 消费 Builder，构建 Subscriber 并注册为全局默认
+    //                     之后所有 info!()/error!()/debug!() 宏都经过这个订阅者处理
     tracing_subscriber::fmt()
         .with_max_level(log_level)
         .init();
