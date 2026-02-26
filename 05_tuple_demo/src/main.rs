@@ -341,9 +341,11 @@ fn tuple_type_aliases() {
     type Line = (Point2D, Point2D);
     type Triangle = (Point2D, Point2D, Point2D);
     
+    let point_3d: Point3D = (1.0, 2.0, 3.0);
     let line: Line = ((0.0, 0.0), (3.0, 4.0));
     let triangle: Triangle = ((0.0, 0.0), (3.0, 0.0), (0.0, 4.0));
     
+    println!("   3D点: {:?}", point_3d);
     println!("   线段: {:?}", line);
     println!("   三角形: {:?}", triangle);
     

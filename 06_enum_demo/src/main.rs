@@ -639,6 +639,22 @@ fn enum_collections_demo() {
         items.iter().filter(|item| matches!(item, Item::Treasure(_))).collect()
     }
     
+    // 显示物品详细信息来使用字段
+    fn display_item_details(items: &[Item]) {
+        println!("   物品详细信息:");
+        for item in items {
+            match item {
+                Item::Book(title) => println!("     书籍: {}", title),
+                Item::Tool(name) => println!("     工具: {}", name),
+                Item::Food(name) => println!("     食物: {}", name),
+                Item::Treasure(value) => println!("     宝藏价值: {}", value),
+            }
+        }
+    }
+    
+    // 调用详细信息显示函数来使用字段
+    display_item_details(&inventory);
+    
     println!("   书籍列表:");
     for book in filter_books(&inventory) {
         println!("     {:?}", book);
@@ -665,6 +681,7 @@ fn enum_collections_demo() {
     category_map.insert(Category::Technology, vec!["Rust".to_string(), "Python".to_string()]);
     category_map.insert(Category::Literature, vec!["小说".to_string(), "诗歌".to_string()]);
     category_map.insert(Category::Science, vec!["物理".to_string(), "化学".to_string()]);
+    category_map.insert(Category::History, vec!["古代史".to_string(), "现代史".to_string()]);
     
     println!("   分类映射:");
     for (category, items) in &category_map {
@@ -685,6 +702,7 @@ fn enum_collections_demo() {
     let mut user_permissions: HashSet<Permission> = HashSet::new();
     user_permissions.insert(Permission::Read);
     user_permissions.insert(Permission::Write);
+    user_permissions.insert(Permission::Delete);
     
     println!("   用户权限:");
     for permission in &user_permissions {
@@ -801,6 +819,16 @@ fn enum_error_handling_demo() {
         Validation(String),
     }
     
+    impl std::fmt::Display for AppError {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            match self {
+                AppError::Database(err) => write!(f, "数据库错误: {}", err),
+                AppError::Network(msg) => write!(f, "网络错误: {}", msg),
+                AppError::Validation(msg) => write!(f, "验证错误: {}", msg),
+            }
+        }
+    }
+    
     impl From<DatabaseError> for AppError {
         fn from(error: DatabaseError) -> Self {
             AppError::Database(error)
@@ -809,6 +837,11 @@ fn enum_error_handling_demo() {
     
     // 高级错误处理函数
     fn process_user_request(user_id: i32, action: &str) -> Result<String, AppError> {
+        // 模拟网络检查
+        if user_id < 0 {
+            return Err(AppError::Network("无效的用户ID格式".to_string()));
+        }
+        
         // 连接数据库
         connect_database("localhost:5432")?;
         
@@ -821,17 +854,17 @@ fn enum_error_handling_demo() {
                 update_user(user_id, "新数据")?;
                 Ok("更新成功".to_string())
             }
-            _ => Err(AppError::Validation("无效的操作".to_string())),
+            _ => Err(AppError::Validation(format!("无效的操作: {}", action))),
         }
     }
     
     println!("   高级错误处理:");
-    let requests = vec![(1, "query"), (2, "update"), (999, "invalid")];
+    let requests = vec![(1, "query"), (2, "update"), (999, "invalid"), (-1, "query")];
     
     for (user_id, action) in requests {
         match process_user_request(user_id, action) {
             Ok(result) => println!("     请求成功: {}", result),
-            Err(e) => println!("     请求失败: {:?}", e),
+            Err(e) => println!("     请求失败: {}", e),
         }
     }
     
@@ -1093,7 +1126,13 @@ fn advanced_enum_demo() {
         ))
     );
     
-    let expressions = vec![expr1, expr2, expr3];
+    // 创建表达式: (20 - 5)
+    let expr4 = Expression::Subtract(
+        Box::new(Expression::Number(20)),
+        Box::new(Expression::Number(5))
+    );
+    
+    let expressions = vec![expr1, expr2, expr3, expr4];
     
     for expr in expressions {
         println!("     表达式: {}", expr.to_string());
@@ -1273,16 +1312,16 @@ fn advanced_enum_demo() {
     
     println!("   泛型容器演示:");
     let mut container: Container<i32> = Container::new();
-    println!("     初始状态: {:?}, 长度: {}", container, container.len());
+    println!("     初始状态: {:?}, 长度: {}, 是否为空: {}", container, container.len(), container.is_empty());
     
     container.add(42);
-    println!("     添加一个元素: {:?}, 长度: {}", container, container.len());
+    println!("     添加一个元素: {:?}, 长度: {}, 是否为空: {}", container, container.len(), container.is_empty());
     
     container.add(100);
-    println!("     添加第二个元素: {:?}, 长度: {}", container, container.len());
+    println!("     添加第二个元素: {:?}, 长度: {}, 是否为空: {}", container, container.len(), container.is_empty());
     
     container.add(200);
-    println!("     添加第三个元素: {:?}, 长度: {}", container, container.len());
+    println!("     添加第三个元素: {:?}, 长度: {}, 是否为空: {}", container, container.len(), container.is_empty());
     
     // 枚举和生命周期
     #[derive(Debug)]
@@ -1315,6 +1354,12 @@ fn advanced_enum_demo() {
     println!("     借用的引用: {:?}", borrowed);
     println!("     转换为字符串: '{}'", owned.as_str());
     println!("     转换为字符串: '{}'", borrowed.as_str());
+    
+    // 使用 to_owned 方法
+    let owned_string = owned.to_owned();
+    let borrowed_string = borrowed.to_owned();
+    println!("     转换为拥有的字符串: '{}'", owned_string);
+    println!("     转换为拥有的字符串: '{}'", borrowed_string);
     
     println!();
 }
