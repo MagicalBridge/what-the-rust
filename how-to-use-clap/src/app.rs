@@ -6,36 +6,14 @@ use crate::config::AppConfig;
 /// 控制哪些功能模块需要启动
 #[derive(Clone, Debug, Default)]
 pub struct StartOptions {
-    pub is_test: bool,
     pub enable_sync: bool,
     pub enable_api: bool,
     pub enable_monitor: bool,
 }
 
-impl StartOptions {
-    pub fn all() -> Self {
-        Self {
-            is_test: false,
-            enable_sync: true,
-            enable_api: true,
-            enable_monitor: true,
-        }
-    }
-
-    pub fn test_all() -> Self {
-        Self {
-            is_test: true,
-            enable_sync: true,
-            enable_api: true,
-            enable_monitor: true,
-        }
-    }
-}
-
 /// 根据配置启动各功能模块
 pub async fn run_app(config: &AppConfig, init_timestamp_ms: u64) -> Result<()> {
     let options = StartOptions {
-        is_test: false,
         enable_sync: config.enable_sync,
         enable_api: config.enable_api,
         enable_monitor: config.enable_monitor,
