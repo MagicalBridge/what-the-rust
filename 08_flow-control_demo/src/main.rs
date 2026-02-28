@@ -222,12 +222,14 @@ fn pattern_matching() {
     }
     
     // 匹配枚举
-    let message = TrafficLight::Yellow;
+    let messages = [TrafficLight::Red, TrafficLight::Yellow, TrafficLight::Green];
     println!("   匹配交通灯:");
-    match message {
-        TrafficLight::Red => println!("     停止！"),
-        TrafficLight::Yellow => println!("     准备！"),
-        TrafficLight::Green => println!("     通行！"),
+    for message in messages {
+        match message {
+            TrafficLight::Red => println!("     停止！"),
+            TrafficLight::Yellow => println!("     准备！"),
+            TrafficLight::Green => println!("     通行！"),
+        }
     }
     
     // 匹配 Option

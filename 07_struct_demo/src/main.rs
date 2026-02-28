@@ -656,6 +656,7 @@ fn advanced_structs() {
     
     println!("   点1: {:?}", point1);
     println!("   点2 (克隆): {:?}", point2);
+    println!("   点1分量: x={}, y={}, z={}", point1.x, point1.y, point1.z);
     
     // 结构体实现PartialEq和Eq
     #[derive(PartialEq, Eq, Debug)]
@@ -692,6 +693,7 @@ fn advanced_structs() {
     
     let default_config = Config::default();
     println!("   默认配置: {:?}", default_config);
+    println!("   默认配置明细: host={}, port={}, timeout={}", default_config.host, default_config.port, default_config.timeout);
     
     // 另一个配置结构体，使用派生Default
     #[derive(Default, Debug)]
@@ -702,6 +704,7 @@ fn advanced_structs() {
     
     let simple_config = SimpleConfig::default();
     println!("   简单配置: {:?}", simple_config);
+    println!("   简单配置明细: host={}, port={}", simple_config.host, simple_config.port);
     
     println!();
 }
