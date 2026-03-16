@@ -1,0 +1,9 @@
+[package]
+name = "how-to-use-rocksdb"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rocksdb = "0.22"
+anyhow = "1"
+tempfile = "3"
