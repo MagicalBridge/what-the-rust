@@ -13,6 +13,7 @@ struct Post {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct User {
     id: u32,
     name: String,
@@ -151,7 +152,7 @@ async fn json_data_examples() -> Result<(), Error> {
     
     if response.status().is_success() {
         let user: User = response.json().await?;
-        println!("用户信息: {} ({})", user.name, user.email);
+        println!("用户信息: #{} {} ({})", user.id, user.name, user.email);
     }
     
     println!();
