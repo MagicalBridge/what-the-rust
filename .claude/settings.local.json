@@ -1,7 +1,23 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cargo check:*)"
+      "Bash(cargo check:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:claude.ai)",
+      "Bash(gh repo:*)",
+      "Bash(curl:*)",
+      "Bash(claude:*)",
+      "Skill(update-config)",
+      "Bash(python3 -c \"import sys,json; print\\(json.dumps\\(json.load\\(sys.stdin\\), indent=2\\)\\)\")",
+      "Bash(python3 -c \"import sys,json; content = json.load\\(sys.stdin\\); import base64; print\\(base64.b64decode\\(content[''''content'''']\\).decode\\(\\)\\)\")",
+      "mcp__ide__getDiagnostics",
+      "Bash(gh api:*)",
+      "Bash(git ls-remote:*)",
+      "Bash(git clone:*)",
+      "Read(//private/tmp/claude-hud-test/.claude-plugin/**)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2\\)\\)\")",
+      "Bash(ls:*)"
     ]
   }
 }
