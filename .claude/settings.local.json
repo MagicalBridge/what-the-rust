@@ -17,7 +17,13 @@
       "Bash(git clone:*)",
       "Read(//private/tmp/claude-hud-test/.claude-plugin/**)",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2\\)\\)\")",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(mkdir -p ~/.cache/tmp)",
+      "Bash(TMPDIR=~/.cache/tmp claude --plugin marketplace add jarrodwatts/claude-hud)",
+      "Bash(yes)",
+      "Bash(pip --version)",
+      "Bash(pip3 --version)",
+      "Bash(echo \"$PATH\")"
     ]
   }
 }
