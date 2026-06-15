@@ -23,7 +23,8 @@
       "Bash(yes)",
       "Bash(pip --version)",
       "Bash(pip3 --version)",
-      "Bash(echo \"$PATH\")"
+      "Bash(echo \"$PATH\")",
+      "Bash(cargo build *)"
     ]
   }
 }
